@@ -64,11 +64,14 @@ class Integrator:
         masses = self.forces.par.masses
         natoms = len(masses)
         for _ in range(niter):
-            _first_VV(s.pos, s.vel, s.forces, masses, self.dt)
+            # s.forces.requires_grad = False
+            _first_VV(s.pos, s.vel, s.forces.detach(), masses, self.dt)
+            # print('s.pos req grad', s.pos.requires_grad)
+            # s.pos.requires_grad = False
             pot = self.forces.compute(s.pos, s.box, s.forces)
             if self.T:
                 langevin(s.vel, self.gamma, self.vcoeff, self.dt, self.device)
-            _second_VV(s.vel, s.forces, masses, self.dt)
+            _second_VV(s.vel, s.forces.detach(), masses, self.dt)
 
         Ekin = np.array([v.item() for v in kinetic_energy(masses, s.vel)])
         T = kinetic_to_temp(Ekin, natoms)

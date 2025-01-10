@@ -159,18 +159,22 @@ class Parameters:
     def make_bonds(self, mol, ff):
         uqbonds = np.unique([sorted(bb) for bb in mol.bonds], axis=0)
         bonds = {"idx": [], "map": [], "params": {}}
-        bonds["idx"] = torch.tensor(uqbonds.astype(np.int64))
+        bonds["idx"] = torch.tensor(uqbonds.astype(np.int64)) # [[0,1], [1,2], [2,3], ... ]
 
         k = 0
         for i, bb in enumerate(uqbonds):
-            at_t = tuple(mol.atomtype[bb])
+            at_t = tuple(mol.atomtype[bb]) # at_t = ('CAP', 'CAH') or ('CAP', 'CAH') or ...
             if at_t not in bonds["params"]:
                 bonds["params"][at_t] = [k, ff.get_bond(*at_t)]
+                # print('at_t', at_t)
+                # print('bonds["params"][at_t]', bonds["params"][at_t]) # [117, (111.9363501657298, 3.887140786921806)]
                 k += 1
             bonds["map"].append([i, bonds["params"][at_t][0]])
 
         bonds["map"] = torch.tensor(bonds["map"])
         bonds["params"] = torch.tensor([x[1] for x in bonds["params"].values()])
+        # print('uqbonds', uqbonds)
+        # print('bonds', bonds.keys(), bonds['idx'][:4,:], bonds['map'][:5,:], bonds['params'][:5,:])
         return bonds
 
     def make_angles(self, mol, ff):
@@ -444,6 +448,7 @@ class Parameters:
             self.nonbonded_14_params["params"][:, 0],
             self.nonbonded_14_params["params"][:, 1],
         )
+
 
 
 def calculate_AB(sigma, epsilon):
